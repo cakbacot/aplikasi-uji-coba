@@ -12,3 +12,10 @@ bin/
 .idea/
 .vscode/
 *.iml
+
+# Packaging & Distribution
+dist/
+build_jar/
+release_input/
+*.jar
+!lib/*.jar

@@ -148,12 +148,13 @@ aplikasi uji coba/
 ├── build.bat                     # Skrip kompilasi otomatis
 ├── run.bat                       # Skrip menjalankan aplikasi
 ├── test.bat                      # Skrip menjalankan pengujian otomatis
+├── package.bat                   # Skrip otomatis membuat KuroFin.jar dan KuroFin.exe
 └── README.md
 ```
 
 ---
 
-## 5. Cara Menjalankan Aplikasi
+## 5. Cara Menjalankan Aplikasi (Mode Development)
 
 ### A. Menggunakan Skrip Batch (Windows)
 
@@ -178,9 +179,43 @@ aplikasi uji coba/
 ### B. Menjalankan Manual via CLI
 
 ```cmd
-REM 1. Kompilasi
-"C:\Program Files\Java\jdk-25\bin\javac.exe" -encoding UTF-8 -cp "lib/*" -d bin src/kurofin/*.java src/kurofin/model/*.java src/kurofin/dao/*.java src/kurofin/controller/*.java src/kurofin/util/*.java src/kurofin/view/*.java src/kurofin/view/dialog/*.java src/kurofin/view/chart/*.java src/kurofin/test/*.java
+REM 1. Kompilasi (Target Java 17+)
+"C:\Program Files\Java\jdk-25\bin\javac.exe" -encoding UTF-8 --release 17 -cp "lib/*" -d bin src/kurofin/*.java src/kurofin/model/*.java src/kurofin/dao/*.java src/kurofin/controller/*.java src/kurofin/util/*.java src/kurofin/view/*.java src/kurofin/view/dialog/*.java src/kurofin/view/chart/*.java src/kurofin/test/*.java
 
 REM 2. Jalankan GUI Aplikasi
 "C:\Program Files\Java\jdk-25\bin\java.exe" --enable-native-access=ALL-UNNAMED -cp "bin;lib/*" kurofin.Main
 ```
+
+---
+
+## 6. Distribusi Executable (JAR & EXE Windows Siap Pakai)
+
+Untuk menjalankan atau membagikan aplikasi KuroFin tanpa perlu menyentuh command prompt atau source code:
+
+### A. Membangun Paket JAR & EXE Secara Otomatis
+Cukup klik ganda file **`package.bat`** atau ketik di terminal:
+```cmd
+package.bat
+```
+Skrip ini secara otomatis:
+1. Mengompilasi seluruh kode sumber dengan target kompatibilitas Java 17+.
+2. Mengemas semua dependensi (`sqlite-jdbc`, `flatlaf`, `openpdf`, `slf4j`) ke dalam satu file **`KuroFin.jar`** (*standalone fat/uber JAR*).
+3. Membangun executable native Windows beserta runtime Java mandiri (*embedded runtime*) di dalam folder: **`dist\KuroFin\KuroFin.exe`**.
+
+---
+
+### B. Menjalankan Hasil Paket
+
+1. **Native Windows Executable (`dist\KuroFin\KuroFin.exe`) [Sangat Direkomendasikan]**:
+   - **Tinggal Klik Ganda** file `KuroFin.exe` di dalam folder `dist\KuroFin\`.
+   - **Tanpa Perlu Instal Java**: Folder tersebut sudah dilengkapi dengan embedded runtime Java sendiri, sehingga aplikasi bersifat *portable* dan langsung jalan di komputer Windows mana pun.
+   - Anda cukup men-zip folder `dist\KuroFin` lalu membagikannya kepada pengguna lain.
+
+2. **Standalone Executable JAR (`KuroFin.jar`)**:
+   - Cukup **klik ganda** file `KuroFin.jar` di Windows Explorer (jika file asosiasi `.jar` telah terhubung ke Java 17+).
+   - Atau jalankan lewat perintah:
+     ```cmd
+     java -jar KuroFin.jar
+     ```
+   - File ini telah merangkum seluruh dependensi pustaka (*all-in-one standalone*).
+

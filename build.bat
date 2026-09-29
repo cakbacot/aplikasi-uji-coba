@@ -39,8 +39,8 @@ echo Menggunakan compiler: "%JAVAC_BIN%"
 REM Buat direktori output
 if not exist "bin" mkdir "bin"
 
-echo Mengompilasi kode sumber KuroFin...
-"%JAVAC_BIN%" -encoding UTF-8 -cp "lib/*" -d bin src/kurofin/*.java src/kurofin/model/*.java src/kurofin/dao/*.java src/kurofin/controller/*.java src/kurofin/util/*.java src/kurofin/view/*.java src/kurofin/view/dialog/*.java src/kurofin/view/chart/*.java src/kurofin/test/*.java
+echo Mengompilasi kode sumber KuroFin (Target Java 17+)...
+"%JAVAC_BIN%" -encoding UTF-8 --release 17 -cp "lib/*" -d bin src/kurofin/*.java src/kurofin/model/*.java src/kurofin/dao/*.java src/kurofin/controller/*.java src/kurofin/util/*.java src/kurofin/view/*.java src/kurofin/view/dialog/*.java src/kurofin/view/chart/*.java src/kurofin/test/*.java
 
 if %errorlevel% equ 0 (
     echo [SUKSES] Kompilasi berhasil! Seluruh class tersimpan di folder bin/
