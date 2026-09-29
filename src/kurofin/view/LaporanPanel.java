@@ -381,8 +381,16 @@ public class LaporanPanel extends JPanel {
             try {
                 String periodInfo = (String) cbPeriodePreset.getSelectedItem();
                 laporanController.exportToCsv(file, currentTransactions, periodInfo);
-                AlertDialog.showInfo(this, "Ekspor Berhasil",
-                        "Laporan CSV berhasil disimpan ke:\n" + file.getAbsolutePath());
+                boolean open = AlertDialog.showConfirm(this, "Ekspor CSV Berhasil",
+                        "Laporan CSV berhasil disimpan ke:\n" + file.getAbsolutePath() +
+                                "\n\nApakah Anda ingin membuka file CSV sekarang?");
+                if (open) {
+                    try {
+                        Desktop.getDesktop().open(file);
+                    } catch (Exception e) {
+                        AlertDialog.showError(this, "Gagal Membuka File", "Tidak dapat membuka file CSV secara otomatis: " + e.getMessage());
+                    }
+                }
             } catch (Exception ex) {
                 AlertDialog.showError(this, "Gagal Ekspor CSV", ex.getMessage());
             }

@@ -9,9 +9,18 @@ REM Deteksi compiler Java 17+ / 25
 set JAVAC_BIN=
 if exist "C:\Program Files\Java\jdk-25\bin\javac.exe" (
     set "JAVAC_BIN=C:\Program Files\Java\jdk-25\bin\javac.exe"
-) else if defined JAVA_HOME (
-    if exist "%JAVA_HOME%\bin\javac.exe" (
-        set "JAVAC_BIN=%JAVA_HOME%\bin\javac.exe"
+) else (
+    for /d %%D in ("C:\Program Files\Java\jdk*") do (
+        if exist "%%D\bin\javac.exe" (
+            set "JAVAC_BIN=%%D\bin\javac.exe"
+        )
+    )
+)
+if "%JAVAC_BIN%"=="" (
+    if defined JAVA_HOME (
+        if exist "%JAVA_HOME%\bin\javac.exe" (
+            set "JAVAC_BIN=%JAVA_HOME%\bin\javac.exe"
+        )
     )
 )
 
@@ -21,7 +30,6 @@ if "%JAVAC_BIN%"=="" (
         set "JAVAC_BIN=javac"
     ) else (
         echo [ERROR] Compiler javac tidak ditemukan. Pastikan JDK 17+ telah terpasang.
-        pause
         exit /b 1
     )
 )
@@ -38,7 +46,6 @@ if %errorlevel% equ 0 (
     echo [SUKSES] Kompilasi berhasil! Seluruh class tersimpan di folder bin/
 ) else (
     echo [GAGAL] Kompilasi mengalami error.
-    pause
     exit /b %errorlevel%
 )
 

@@ -183,6 +183,13 @@ public class KategoriPanel extends JPanel {
             }
 
             tableModel.setRowCount(0);
+            if (currentList.isEmpty()) {
+                tableModel.addRow(new Object[]{
+                        null, "Belum ada kategori yang sesuai", "-", "-", "-"
+                });
+                return;
+            }
+
             for (Kategori k : currentList) {
                 int usage = kategoriController.getUsageCount(k.getIdKategori());
                 String status = usage > 0 ? "🔒 Digunakan (" + usage + " trx)" : "✓ Bebas / Dapat Dihapus";
@@ -214,7 +221,10 @@ public class KategoriPanel extends JPanel {
             return;
         }
 
-        int id = (int) tableModel.getValueAt(selectedRow, 0);
+        Object val = tableModel.getValueAt(selectedRow, 0);
+        if (val == null) return;
+        int id = (Integer) val;
+
         Kategori target = null;
         for (Kategori k : currentList) {
             if (k.getIdKategori() == id) {
@@ -242,8 +252,11 @@ public class KategoriPanel extends JPanel {
             return;
         }
 
-        int id = (int) tableModel.getValueAt(selectedRow, 0);
-        String nama = (String) tableModel.getValueAt(selectedRow, 1);
+        Object val = tableModel.getValueAt(selectedRow, 0);
+        if (val == null) return;
+        int id = (Integer) val;
+
+        String nama = String.valueOf(tableModel.getValueAt(selectedRow, 1));
 
         try {
             int usage = kategoriController.getUsageCount(id);

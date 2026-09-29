@@ -14,6 +14,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -139,6 +141,15 @@ public class BudgetPanel extends JPanel {
             }
         });
 
+        table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && table.getSelectedRow() != -1) {
+                    onUbah();
+                }
+            }
+        });
+
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.getViewport().setBackground(UITheme.CARD_BG);
@@ -151,6 +162,13 @@ public class BudgetPanel extends JPanel {
         try {
             currentStatusList = budgetController.getAllBudgetStatus();
             tableModel.setRowCount(0);
+
+            if (currentStatusList.isEmpty()) {
+                tableModel.addRow(new Object[]{
+                        null, "Belum ada anggaran. Klik '+ Atur Anggaran Baru'", "-", "-", "-", "-", "-", "-"
+                });
+                return;
+            }
 
             for (BudgetStatus bs : currentStatusList) {
                 BudgetLimit b = bs.getBudgetLimit();

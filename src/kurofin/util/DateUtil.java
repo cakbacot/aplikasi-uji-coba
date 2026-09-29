@@ -12,9 +12,9 @@ import java.util.Locale;
 public class DateUtil {
 
     public static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    public static final DateTimeFormatter INDO_FULL_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy", new Locale("id", "ID"));
+    public static final DateTimeFormatter INDO_FULL_FORMATTER = DateTimeFormatter.ofPattern("dd MMMM yyyy", Locale.forLanguageTag("id-ID"));
     public static final DateTimeFormatter INDO_SHORT_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    public static final DateTimeFormatter MONTH_YEAR_FORMATTER = DateTimeFormatter.ofPattern("MMMM yyyy", new Locale("id", "ID"));
+    public static final DateTimeFormatter MONTH_YEAR_FORMATTER = DateTimeFormatter.ofPattern("MMMM yyyy", Locale.forLanguageTag("id-ID"));
 
     public static String todayIso() {
         return LocalDate.now().format(ISO_FORMATTER);

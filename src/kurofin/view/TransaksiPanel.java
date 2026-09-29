@@ -147,7 +147,8 @@ public class TransaksiPanel extends JPanel {
         // Keyword Search
         txtSearch = new JTextField(12);
         UITheme.styleTextField(txtSearch);
-        txtSearch.setToolTipText("Cari berdasarkan catatan transaksi");
+        txtSearch.setToolTipText("Cari berdasarkan catatan transaksi (Tekan Enter)");
+        txtSearch.addActionListener(e -> applyFilter());
 
         JButton btnFilter = UITheme.createPrimaryButton("Cari");
         btnFilter.addActionListener(e -> applyFilter());
@@ -338,25 +339,29 @@ public class TransaksiPanel extends JPanel {
         try {
             currentDataList = transaksiController.getFilteredTransaksi(start, end, jenis, katId, kw);
             tableModel.setRowCount(0);
-
             double sumIn = 0;
             double sumOut = 0;
-
-            for (Transaksi t : currentDataList) {
-                if (t.isPemasukan()) {
-                    sumIn += t.getNominal();
-                } else {
-                    sumOut += t.getNominal();
-                }
-
+            if (currentDataList.isEmpty()) {
                 tableModel.addRow(new Object[]{
-                        t.getIdTransaksi(),
-                        DateUtil.formatShort(t.getTanggal()),
-                        t.getJenisTransaksi(),
-                        t.getNamaKategori() != null ? t.getNamaKategori() : "-",
-                        CurrencyUtil.formatRupiah(t.getNominal()),
-                        t.getKeterangan() != null ? t.getKeterangan() : "-"
+                        null, "-", "-", "Tidak ada transaksi yang cocok dengan filter", "-", "-"
                 });
+            } else {
+                for (Transaksi t : currentDataList) {
+                    if (t.isPemasukan()) {
+                        sumIn += t.getNominal();
+                    } else {
+                        sumOut += t.getNominal();
+                    }
+
+                    tableModel.addRow(new Object[]{
+                            t.getIdTransaksi(),
+                            DateUtil.formatShort(t.getTanggal()),
+                            t.getJenisTransaksi(),
+                            t.getNamaKategori() != null ? t.getNamaKategori() : "-",
+                            CurrencyUtil.formatRupiah(t.getNominal()),
+                            t.getKeterangan() != null ? t.getKeterangan() : "-"
+                    });
+                }
             }
 
             lblCount.setText("Total Data: " + currentDataList.size());
@@ -394,7 +399,10 @@ public class TransaksiPanel extends JPanel {
             return;
         }
 
-        int id = (int) tableModel.getValueAt(selectedRow, 0);
+        Object val = tableModel.getValueAt(selectedRow, 0);
+        if (val == null) return;
+        int id = (Integer) val;
+
         Transaksi target = null;
         for (Transaksi t : currentDataList) {
             if (t.getIdTransaksi() == id) {
@@ -419,9 +427,12 @@ public class TransaksiPanel extends JPanel {
             return;
         }
 
-        int id = (int) tableModel.getValueAt(selectedRow, 0);
-        String tgl = (String) tableModel.getValueAt(selectedRow, 1);
-        String nominal = (String) tableModel.getValueAt(selectedRow, 4);
+        Object val = tableModel.getValueAt(selectedRow, 0);
+        if (val == null) return;
+        int id = (Integer) val;
+
+        String tgl = String.valueOf(tableModel.getValueAt(selectedRow, 1));
+        String nominal = String.valueOf(tableModel.getValueAt(selectedRow, 4));
 
         boolean confirm = AlertDialog.showConfirm(this, "Konfirmasi Hapus Transaksi",
                 "Apakah Anda yakin ingin menghapus transaksi tanggal " + tgl + " senilai " + nominal + "?");

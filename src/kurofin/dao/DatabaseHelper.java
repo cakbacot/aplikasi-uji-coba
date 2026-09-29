@@ -32,9 +32,11 @@ public class DatabaseHelper {
             String url = "jdbc:sqlite:" + dbFilePath;
             connection = DriverManager.getConnection(url);
 
-            // Aktifkan Foreign Keys constraint pada SQLite
+            // Konfigurasi performa & integritas SQLite
             try (Statement stmt = connection.createStatement()) {
                 stmt.execute("PRAGMA foreign_keys = ON;");
+                stmt.execute("PRAGMA journal_mode = WAL;");
+                stmt.execute("PRAGMA busy_timeout = 5000;");
             }
         }
         return connection;

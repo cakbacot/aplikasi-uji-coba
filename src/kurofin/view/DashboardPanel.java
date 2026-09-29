@@ -16,7 +16,10 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -36,6 +39,7 @@ public class DashboardPanel extends JPanel {
 
     private JTable tableRecent;
     private DefaultTableModel tableModel;
+    private List<Transaksi> currentRecentList = new ArrayList<>();
 
     private JPanel budgetAlertContainer;
 
@@ -120,10 +124,18 @@ public class DashboardPanel extends JPanel {
 
         JPanel recentHeader = new JPanel(new BorderLayout());
         recentHeader.setOpaque(false);
-        JLabel recentTitle = new JLabel("Transaksi Terbaru");
+        JLabel recentTitle = new JLabel("Transaksi Terbaru (6 Terakhir)");
         recentTitle.setFont(UITheme.FONT_SUBTITLE);
         recentTitle.setForeground(UITheme.TEXT_MAIN);
         recentHeader.add(recentTitle, BorderLayout.WEST);
+
+        JButton btnViewAll = UITheme.createSecondaryButton("Lihat Semua Transaksi →");
+        btnViewAll.addActionListener(e -> {
+            if (parentFrame instanceof MainFrame) {
+                ((MainFrame) parentFrame).switchPage("TRANSAKSI");
+            }
+        });
+        recentHeader.add(btnViewAll, BorderLayout.EAST);
 
         recentCard.add(recentHeader, BorderLayout.NORTH);
 
@@ -148,8 +160,10 @@ public class DashboardPanel extends JPanel {
                 String val = String.valueOf(value);
                 if ("Pemasukan".equalsIgnoreCase(val)) {
                     lbl.setForeground(UITheme.INCOME_COLOR);
-                } else {
+                } else if ("Pengeluaran".equalsIgnoreCase(val)) {
                     lbl.setForeground(UITheme.EXPENSE_COLOR);
+                } else {
+                    lbl.setForeground(UITheme.TEXT_MUTED);
                 }
                 return lbl;
             }
@@ -161,13 +175,33 @@ public class DashboardPanel extends JPanel {
                 JLabel lbl = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 lbl.setHorizontalAlignment(RIGHT);
                 lbl.setFont(UITheme.FONT_BOLD);
-                String type = (String) table.getValueAt(row, 1);
+                String type = String.valueOf(table.getValueAt(row, 1));
                 if ("Pemasukan".equalsIgnoreCase(type)) {
                     lbl.setForeground(UITheme.INCOME_COLOR);
-                } else {
+                } else if ("Pengeluaran".equalsIgnoreCase(type)) {
                     lbl.setForeground(UITheme.EXPENSE_COLOR);
+                } else {
+                    lbl.setForeground(UITheme.TEXT_MUTED);
                 }
                 return lbl;
+            }
+        });
+
+        // Double click to edit on recent table
+        tableRecent.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && tableRecent.getSelectedRow() != -1) {
+                    int row = tableRecent.getSelectedRow();
+                    if (row >= 0 && row < currentRecentList.size()) {
+                        Transaksi target = currentRecentList.get(row);
+                        TransaksiDialog dialog = new TransaksiDialog(parentFrame, transaksiController, kategoriController, target);
+                        dialog.setVisible(true);
+                        if (dialog.isSaved()) {
+                            refreshData();
+                        }
+                    }
+                }
             }
         });
 
@@ -217,15 +251,21 @@ public class DashboardPanel extends JPanel {
 
             // Refresh Transaksi Terbaru (Maksimal 6)
             tableModel.setRowCount(0);
-            List<Transaksi> recent = transaksiController.getRecentTransaksi(6);
-            for (Transaksi t : recent) {
+            currentRecentList = transaksiController.getRecentTransaksi(6);
+            if (currentRecentList.isEmpty()) {
                 tableModel.addRow(new Object[]{
-                        DateUtil.formatShort(t.getTanggal()),
-                        t.getJenisTransaksi(),
-                        t.getNamaKategori() != null ? t.getNamaKategori() : "-",
-                        CurrencyUtil.formatRupiah(t.getNominal()),
-                        t.getKeterangan() != null ? t.getKeterangan() : "-"
+                        "-", "-", "Belum ada transaksi tersimpan", "-", "-"
                 });
+            } else {
+                for (Transaksi t : currentRecentList) {
+                    tableModel.addRow(new Object[]{
+                            DateUtil.formatShort(t.getTanggal()),
+                            t.getJenisTransaksi(),
+                            t.getNamaKategori() != null ? t.getNamaKategori() : "-",
+                            CurrencyUtil.formatRupiah(t.getNominal()),
+                            t.getKeterangan() != null ? t.getKeterangan() : "-"
+                    });
+                }
             }
 
             // Refresh Budget Warnings
@@ -239,12 +279,74 @@ public class DashboardPanel extends JPanel {
                     budgetAlertContainer.add(Box.createVerticalStrut(8));
                 }
             }
+
+            // Jika tidak ada warning/overbudget, tampilkan status informatif
+            if (!hasAlert) {
+                if (!statuses.isEmpty()) {
+                    budgetAlertContainer.add(createSafeBudgetBanner(statuses.size()));
+                } else {
+                    budgetAlertContainer.add(createHintBudgetBanner());
+                }
+            }
+
             budgetAlertContainer.revalidate();
             budgetAlertContainer.repaint();
 
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    private JPanel createSafeBudgetBanner(int activeCount) {
+        JPanel banner = new JPanel(new BorderLayout(12, 0)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(UITheme.INCOME_BG);
+                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                g2.setColor(UITheme.INCOME_COLOR);
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        banner.setOpaque(false);
+        banner.setBorder(new EmptyBorder(10, 14, 10, 14));
+        banner.setMaximumSize(new Dimension(Short.MAX_VALUE, 46));
+
+        JLabel lbl = new JLabel("✓ Seluruh batas anggaran (" + activeCount + " aktif) berada dalam batas aman terkendali (< 80%).");
+        lbl.setFont(UITheme.FONT_BOLD);
+        lbl.setForeground(UITheme.INCOME_COLOR);
+
+        banner.add(lbl, BorderLayout.WEST);
+        return banner;
+    }
+
+    private JPanel createHintBudgetBanner() {
+        JPanel banner = new JPanel(new BorderLayout(12, 0)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(99, 102, 241, 30));
+                g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                g2.setColor(new Color(99, 102, 241, 100));
+                g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 10, 10);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        banner.setOpaque(false);
+        banner.setBorder(new EmptyBorder(10, 14, 10, 14));
+        banner.setMaximumSize(new Dimension(Short.MAX_VALUE, 46));
+
+        JLabel lbl = new JLabel("💡 Tips: Atur batas anggaran pada menu 'Batas Anggaran' untuk memantau pengeluaran Anda secara otomatis.");
+        lbl.setFont(UITheme.FONT_REGULAR);
+        lbl.setForeground(UITheme.TEXT_MAIN);
+
+        banner.add(lbl, BorderLayout.WEST);
+        return banner;
     }
 
     private JPanel createBudgetAlertBanner(BudgetStatus bs) {
