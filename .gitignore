@@ -1,0 +1,14 @@
+# Byte-code
+bin/
+*.class
+
+# SQLite Databases created at runtime
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# IDE
+.idea/
+.vscode/
+*.iml
