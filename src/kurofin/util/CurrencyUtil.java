@@ -12,7 +12,7 @@ public class CurrencyUtil {
     private static final DecimalFormat RUPIAH_FORMAT;
 
     static {
-        DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("id", "ID"));
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag("id-ID"));
         symbols.setCurrencySymbol("Rp ");
         symbols.setMonetaryDecimalSeparator(',');
         symbols.setGroupingSeparator('.');
@@ -24,7 +24,7 @@ public class CurrencyUtil {
     }
 
     public static String formatRupiahWithoutSymbol(double amount) {
-        DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("id", "ID"));
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.forLanguageTag("id-ID"));
         symbols.setGroupingSeparator('.');
         DecimalFormat df = new DecimalFormat("#,##0", symbols);
         return df.format(amount);
@@ -39,9 +39,29 @@ public class CurrencyUtil {
         }
         String clean = input.trim()
                 .replaceAll("(?i)rp", "")
-                .replace(" ", "")
-                .replace(".", "")
-                .replace(",", ".");
+                .replace(" ", "");
+
+        if (clean.contains(".") && clean.contains(",")) {
+            if (clean.lastIndexOf(",") > clean.lastIndexOf(".")) {
+                clean = clean.replace(".", "").replace(",", ".");
+            } else {
+                clean = clean.replace(",", "");
+            }
+        } else if (clean.contains(",")) {
+            int commaCount = clean.length() - clean.replace(",", "").length();
+            if (commaCount == 1 && clean.length() - clean.indexOf(",") <= 3) {
+                clean = clean.replace(",", ".");
+            } else {
+                clean = clean.replace(",", "");
+            }
+        } else if (clean.contains(".")) {
+            int dotCount = clean.length() - clean.replace(".", "").length();
+            if (dotCount == 1 && clean.length() - clean.indexOf(".") <= 3 && !clean.matches(".*\\.\\d{3}$")) {
+                // Pertahankan titik sebagai desimal
+            } else {
+                clean = clean.replace(".", "");
+            }
+        }
         return Double.parseDouble(clean);
     }
 }
